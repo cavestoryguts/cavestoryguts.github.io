@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>RoBeats RemoteSpy to osu! Converter</title>
+<style>
+textarea {
+  resize: none;
+}
+</style>
+</head>
+<body onload="startup()">
+<script>
+function startup() {
+//this used to hold debug values by way of document.getElementById('timeNumber').innerHTML
+}
+
+function parser() {
+var
+timesRaw = document.getElementById('timeNumber').value.split("\n"),
+floatsRaw = document.getElementById('floatNumber').value.split("\n"),
+notesRaw = document.getElementById('noteNumber').value.split("\n"),
+lanesRaw = document.getElementById('lanePosition').value.split("\n");
+document.getElementById("out").innerHTML = "";
+
+var rawNoteData = [];
+//i used floatsRaw but you can use any of the four inputs since they are really the same length
+for (var i = 0; i <= floatsRaw.length - 1; i++) { 
+rawNoteData.push(
+{
+"time": Math.ceil(timesRaw[i] - floatsRaw[i]),
+"note": notesRaw[i],
+"lane": lanesRaw[i],
+"isDuplicate": false
+});}
+//sorts the rawNoteData by using a compare function
+var sortedNoteData = rawNoteData;
+//sortedNoteData.sort();
+sortedNoteData.sort(function(a, b){return a.note - b.note;});
+//gets both ln base and ln end data
+var lnBase = [], lnEnd = [], regularNotes = [];
+for (var i = 0; i < sortedNoteData.length - 1; i++) {
+if (sortedNoteData[i + 1].note == sortedNoteData[i].note) {
+lnBase.push(sortedNoteData[i]);
+lnEnd.push(sortedNoteData[i+1]);
+sortedNoteData[i].isDuplicate = true;
+sortedNoteData[i+1].isDuplicate = true;
+}}
+//and now we iterate through sortedNoteData again to get isDuplicate = false notes to find non-duplicate notes
+for (var i = 0; i <= sortedNoteData.length - 1; i++) { 
+if (sortedNoteData[i].isDuplicate == false) {
+regularNotes.push(sortedNoteData[i]);
+}}
+
+var finalNoteData = [];
+//pushes regular notes into finalNoteData
+for (var i = 0; i <= regularNotes.length - 1; i++) { 
+finalNoteData.push([regularNotes[i].note, regularNotes[i].time, regularNotes[i].lane]);
+}
+//pushes long notes into finalNoteData
+for (var i = 0; i <= lnBase.length - 1; i++) { 
+finalNoteData.push([lnBase[i].note, lnBase[i].time, lnBase[i].lane, lnEnd[i].time - lnBase[i].time]);
+}
+//sorts the amalgamation that is finalNoteData by note number
+finalNoteData.sort(function(a, b){return a[0] - b[0];});
+finalNoteData.join("\n");
+var final = "";
+for (var i = 0; i <= finalNoteData.length - 1; i++) { 
+final += finalNoteData[i] + "\n";
+}
+//gets rid of the note number
+var lnReplace = /^\d+,/gm, lnRegex = new RegExp(lnReplace,"gm");
+final = final.replace(lnRegex, "");
+//regular notes
+lnReplace = /^\d+,\d+$/gm, lnRegex = new RegExp(lnReplace,"gm");
+final = final.replace(lnRegex, "v1\($&\);");
+//long notes
+lnReplace = /^\d+,\d+,\d+$/gm, lnRegex = new RegExp(lnReplace,"gm");
+final = final.replace(lnRegex, "v2\($&\);");
+//the commas don't have spaces and this code adds them
+lnReplace = /,/gm, lnRegex = new RegExp(lnReplace,"gm");
+final = final.replace(lnRegex, ", ");
+//finally. this project lasted from october 3rd - october 10th.
+document.getElementById('out').innerHTML += final;
+
+}
+</script>
+
+<a href="https://github.com/cavestoryguts/rob2osu">https://github.com/cavestoryguts/rob2osu</a><br/>
+<div id="inputs">
+<div id="1" style="padding:20px;background-color:#fecddd;float:left"><textarea id="timeNumber" style="overflow: hidden" rows="4" cols="20"></textarea><br/>Time Number</div>
+<div id="1" style="padding:20px;background-color:#aecddd;float:left"><textarea id="floatNumber" style="overflow: hidden" rows="4" cols="20"></textarea><br/>Float Number</div>
+<div id="1" style="padding:20px;background-color:#fffddd;float:left"><textarea id="noteNumber" style="overflow: hidden" rows="4" cols="20"></textarea><br/>Note Number</div>
+<div id="1" style="padding:20px;background-color:#eecddd;float:left"><textarea id="lanePosition" style="overflow: hidden" rows="4" cols="20"></textarea><br/>Lane Position</div>
+</div>
+<textarea id="out" style="width:1000px;height:400px" readonly>osu! output</textarea>
+<br/>
+<button id="convertButton" onclick="parser()">Convert!</button><br/><br/><br/>
+</body>
+</html>
