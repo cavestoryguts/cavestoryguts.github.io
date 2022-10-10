@@ -1,2 +1,2 @@
 # remotespyconverter
-https://github.com/cavestoryguts/remotespyconverter/
+https://cavestoryguts.github.io/remotespyconverter/
